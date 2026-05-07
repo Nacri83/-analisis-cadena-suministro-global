@@ -1,5 +1,5 @@
 #  Análisis de Riesgo en la Cadena de Suministro Global
-### Proyecto Final de Análisis de Datos · IT Academy, Barcelona Activa (2025)
+### Proyecto Final de Análisis de Datos · IT Academy, Barcelona Activa (2025-2026)
 
 ---
 
