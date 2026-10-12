@@ -1,241 +1,86 @@
-#  Análisis de Riesgo en la Cadena de Suministro Global
-### Proyecto Final de Análisis de Datos · IT Academy, Barcelona Activa (2025-2026)
+# Riesgo y disrupción en cadenas de suministro — prototipo de portafolio
 
----
+Prototipo de análisis de datos de punta a punta sobre un dataset sintético de envíos internacionales. Su objetivo es demostrar el flujo completo de trabajo: carga, limpieza, exploración, pruebas estadísticas, índice compuesto, matriz de riesgo, validación temporal interna y dashboard.
 
-## Descripción
+**No está validado para decisiones operativas.** Las conclusiones son ilustrativas del método.
 
-Análisis descriptivo y exploratorio de los principales factores de riesgo que afectan las rutas logísticas marítimas internacionales. Se construye un **índice de impacto compuesto bajo metodología ISO 31000** para identificar, cuantificar y priorizar disrupciones operativas, geopolíticas y de transportista.
+## Fuente de datos
 
-El proyecto culmina con una **matriz de riesgo interactiva** y un **mapa global de rutas logísticas** que permite visualizar qué corredores requieren acción inmediata y cuáles pueden operar bajo monitoreo rutinario.
+- Dataset: `global_supply_chain_risk_2026.csv`, publicado por *nudratabbas* en Kaggle, "Global Supply Chain Risk and Logistics 2024-2026".
+- Licencia: CC0 (dominio público).
+- La ficha del dataset indica que fue **generado sintéticamente** y que puede no reflejar datos del mundo real.
+- Período real del archivo: del 1 de enero de 2024 al 31 de diciembre de 2025 (5.000 envíos). La ficha dice "2024-2026", pero el archivo no contiene datos de 2026.
 
----
+## Estructura del notebook
 
-## Preguntas de negocio respondidas
-
-| # | Pregunta |
-|---|----------|
-| P1 | ¿Dónde están los problemas? — Identificación de rutas críticas |
-| P2 | ¿Qué tan impactante es el riesgo? — Cuantificación del impacto |
-| P3 | ¿Dónde priorizar la inversión en mitigación? |
-| P4 | ¿Qué variables explican el fenómeno? — Drivers del riesgo |
-| P5 | ¿Qué acciones reducen el riesgo de forma inmediata? |
-
----
-
-## 🗂️ Contenido del repositorio
-
-| Archivo | Descripción |
+| Etapa | Contenido |
 |---|---|
-| `Proyecto_logistica_definitivo.ipynb` | Notebook principal con el análisis completo |
-| `riesgo_cadena_de_suministro_global_2026.csv` | Dataset de envíos internacionales con variables operativas, climáticas y geopolíticas |
-| `proyecto_documento.pdf` | Informe técnico del proyecto |
-| `Presentación_proyecto.pptx` | Presentación ejecutiva de resultados |
+| 0. Portada | Alcance, fuente, limitaciones |
+| 1. Carga | Lectura y comprensión inicial |
+| 2. Limpieza | Nulos, duplicados, tipos, normalización de texto, categorías, atípicos |
+| 3. Consistencia | Validación de rangos y tipos |
+| 4. EDA | Normalización min-máx, índice de impacto, relaciones entre variables |
+| 5. Rutas | Tasas por ruta con intervalos de confianza, sensibilidad de pesos, pruebas chi-cuadrado |
+| 6. Matriz ISO 31000 | Probabilidad e impacto por ruta, niveles de riesgo, hipótesis de acción |
+| 7. Dashboard | Mapa y tabla con las 10 rutas del ranking |
+| 8. Validación temporal | Partición 2024 (referencia) y 2025 (prueba), sin reajustar criterios |
+| 9. Registro | Cambios aplicados con fecha y pendientes |
 
----
+La lista de revisión metodológica (`Checklist_revision_metodologica.docx`) documenta cada decisión, su justificación, su referencia y su estado.
 
-## Herramientas y tecnologías
+## Resultados principales
 
-- **Python 3**
-- **pandas** — carga, limpieza y transformación de datos
-- **matplotlib / seaborn** — visualización estadística
-- **plotly** — visualizaciones interactivas y mapa global de rutas
-- **numpy** — cálculos numéricos y normalización
-- **Jupyter Notebook** — entorno de desarrollo
+- **Tasa global de disrupción:** 61,3% (3.063 de 5.000 envíos).
+- **Clima:** es la única variable con asociación fuerte con la disrupción (chi-cuadrado p < 0,0001). Tasas: despejado 37%, lluvia 42%, niebla 48%, tormenta 80%, huracán 100%.
+- **Modo de transporte, origen y destino:** no muestran asociación con la disrupción (p = 0,98, 0,97 y 0,92).
+- **Rutas:** de 64 rutas, 2 superan de forma significativa la media global, 2 quedan por debajo y 60 no se distinguen de ella (intervalos de confianza al 95%, unos 70 envíos por ruta).
+- **Causa identificada:** las tres causas definidas explican 1.025 de 3.063 disrupciones (33%).
+- **Sensibilidad de pesos:** con cuatro escenarios de pesos, la correlación de Spearman frente al caso base va de 0,93 a 0,97, y las 10 rutas principales coinciden entre 7 y 10.
+- **Validación temporal (2024 vs. 2025):** el patrón por clima se repite en ambos años. Las rutas no persisten (Spearman = −0,12).
 
----
+## Decisiones provisionales
 
-## 🔍 Metodología
+- **Pesos del índice de impacto:** 0,4 lead time, 0,3 geopolítico, 0,2 transportista, 0,1 clima. Son juicios de valor del autor, con análisis de sensibilidad.
+- **Orden de severidad del clima:** despejado < lluvia < niebla < tormenta < huracán, ajustado a las tasas observadas. Existe circularidad: el mismo resultado sirve para ordenar y para evaluar.
+- **Criterios de la matriz:** probabilidad alta si la tasa supera la global; impacto alto si supera la media global. Son provisionales, pendientes de validación.
+- **Umbrales de causa:** percentiles P90 para geopolítico y lead time, P10 para confiabilidad del transportista.
 
-### 1. Carga y comprensión de datos
-Dataset con registros de envíos internacionales que incluye variables operativas (`lead_time_days`, `distance_km`, `weight_mt`), climáticas (`weather_condition`) y geopolíticas (`geopolitical_risk_score`, `carrier_reliability_score`).
+## Limitaciones
 
-### 2. Limpieza de datos
-- Revisión y tratamiento de valores nulos y duplicados
-- Corrección de tipos de datos (conversión a datetime, categorización)
-- Normalización de columnas categóricas (strip + lowercase)
-- Auditoría y validación de variables categóricas
+- Dataset sintético: los patrones pueden reflejar cómo se generó y no el mundo real.
+- No hay validación externa. La validación temporal es interna, con el mismo dataset.
+- Clima y disrupción pueden estar ligados por construcción del dataset.
+- Pocos envíos por ruta: las diferencias entre rutas solo se detectan si superan unos 15 puntos porcentuales.
+- El tablero de Power BI se construye a partir de las tablas de la carpeta `powerbi/`, exportadas desde el notebook.
 
-### 3. Tratamiento de outliers
-Los valores extremos en `lead_time_days` se mantuvieron como señal operativa real — en logística los retrasos severos no son errores de medición sino exactamente los eventos que se quieren modelar.
-> Referencia: Tukey, J.W. (1977). *Exploratory Data Analysis*, cap. 2.
+## Tablero Power BI
 
-### 4. Construcción del índice de impacto (Risk Scoring Model)
-Normalización min-max de variables clave y construcción de un índice compuesto con pesos basados en impacto operativo:
+La carpeta `powerbi/` contiene las tablas que alimentan el tablero:
 
-```
-impact = lead_time_norm × 0.4 + geo_norm × 0.3 + carrier_norm × 0.2 + weather_norm × 0.1
-```
+- `1_kpis.csv`: indicadores generales (envíos, tasa global, rutas).
+- `2_clima.csv`: tasas por clima con intervalos de confianza y por año.
+- `3_rutas_ic.csv`: tasas por ruta con intervalo de confianza y ranking.
+- `4_matriz_riesgo.csv`: probabilidad, impacto y nivel de riesgo por ruta (criterios provisionales).
+- `5_sensibilidad_pesos.csv`: comparación de escenarios de pesos.
+- `6_validacion_temporal.csv`: tasa global por año.
 
-> Referencia: OECD (2008). *Handbook on Constructing Composite Indicators*, §3. ISO 31000:2018.
+## Cómo reproducir
 
-### 5. Segmentación del riesgo
-Clasificación de cada ruta en 4 categorías de disrupción (geopolítica, fallo de carrier, retraso operativo, sin disrupción) mediante algoritmo basado en percentiles extremos (P90/P10).
+1. Coloca `global_supply_chain_risk_2026.csv` en la ruta que indica la celda de carga, o ajústala.
+2. Instala las dependencias: `pandas`, `numpy`, `scipy`, `matplotlib`, `seaborn`, `plotly`, `nbformat`, `nbconvert`.
+3. Ejecuta `Proyecto_logistica_corregido.ipynb` de principio a fin. No debe haber errores.
 
-### 6. Análisis exploratorio (EDA)
-- Distribución de variables clave mediante boxplots
-- Correlación de Pearson y Spearman entre drivers de riesgo
-- Pairplot segmentado por ocurrencia de disrupción
-- Análisis de rutas más disruptivas mediante heatmap
+## Referencias
 
-### 7. Matriz de riesgo ISO 31000
-Clasificación de rutas en 4 niveles (Critical / High / Medium / Low) combinando probabilidad de disrupción e impacto normalizado, con decisiones ejecutivas específicas por nivel y tipo.
+- ISO 31000:2018, cláusulas 6.4.2 a 6.4.4 y 6.5.2 (identificación, análisis, evaluación y tratamiento de riesgos).
+- OECD (2008), *Handbook on Constructing Composite Indicators*, pp. 19–35 (normalización, ponderación y sensibilidad).
+- scikit-learn, guía de buenas prácticas, §12.2 (fuga de datos).
+- WMO: definición de niebla (visibilidad menor de 1 km).
+- NHC: escala Saffir-Simpson de huracanes (viento sostenido).
+- Ficha del dataset *nudratabbas* en Kaggle (origen sintético).
 
-### 8. Mapa global interactivo
-Visualización geográfica de las rutas logísticas coloreadas por nivel de riesgo (rojo / naranja / verde) con tooltips interactivos.
+**Pendiente de verificar:** el capítulo de Tukey (1977) citado para atípicos y el número de sección de la OECD en la versión original del notebook.
 
----
+## Estado
 
-## Principales hallazgos
-
-- **Todas las rutas analizadas superan el 65% de probabilidad de disrupción**, indicando una red logística con exposición generalizada al riesgo operativo.
-- **Los retrasos operativos son el tipo de disrupción con mayor impacto promedio (0.52)**, seguidos de eventos geopolíticos (0.44) y fallos de carrier (0.39).
-- **El corredor Asia–Europa concentra las rutas más críticas**, especialmente aquellas con disrupciones de tipo Carrier y Geopolítico.
-- **Shanghai – Singapore** se posiciona como la ruta de mayor criticidad, con el mayor impacto normalizado del conjunto.
-- **El transporte marítimo** presenta la mayor cantidad de retrasos extremos; el transporte aéreo no registra outliers en tiempo de entrega.
-- La severidad climática actúa como **amplificador del riesgo**, incrementando tanto el impacto como la volatilidad operativa.
-
----
-
-## Rutas críticas — Acción inmediata recomendada
-# Análisis de Riesgo en la Cadena de Suministro Global
-### Proyecto Final de Análisis de Datos · IT Academy, Barcelona Activa (2025)
-
----
-
-## Descripción
-
-Análisis descriptivo y exploratorio de los principales factores de riesgo que afectan las rutas logísticas marítimas internacionales. Se construye un **índice de impacto compuesto bajo metodología ISO 31000** para identificar, cuantificar y priorizar disrupciones operativas, geopolíticas y de transportista.
-
-El proyecto culmina con una **matriz de riesgo interactiva** y un **mapa global de rutas logísticas** que permite visualizar qué corredores requieren acción inmediata y cuáles pueden operar bajo monitoreo rutinario.
-
----
-
-##  Preguntas de negocio respondidas
-
-| # | Pregunta |
-|---|----------|
-| P1 | ¿Dónde están los problemas? — Identificación de rutas críticas |
-| P2 | ¿Qué tan impactante es el riesgo? — Cuantificación del impacto |
-| P3 | ¿Dónde priorizar la inversión en mitigación? |
-| P4 | ¿Qué variables explican el fenómeno? — Drivers del riesgo |
-| P5 | ¿Qué acciones reducen el riesgo de forma inmediata? |
-
----
-
-##  Contenido del repositorio
-
-| Archivo | Descripción |
-|---|---|
-| `Proyecto_logistica_definitivo.ipynb` | Notebook principal con el análisis completo |
-| `riesgo_cadena_de_suministro_global_2026.csv` | Dataset de envíos internacionales con variables operativas, climáticas y geopolíticas |
-| `proyecto_documento.pdf` | Informe técnico del proyecto |
-| `Presentación_proyecto.pptx` | Presentación ejecutiva de resultados |
-
----
-
-##  Herramientas y tecnologías
-
-- **Python 3**
-- **pandas** — carga, limpieza y transformación de datos
-- **matplotlib / seaborn** — visualización estadística
-- **plotly** — visualizaciones interactivas y mapa global de rutas
-- **numpy** — cálculos numéricos y normalización
-- **Jupyter Notebook** — entorno de desarrollo
-
----
-
-##  Metodología
-
-### 1. Carga y comprensión de datos
-Dataset con registros de envíos internacionales que incluye variables operativas (`lead_time_days`, `distance_km`, `weight_mt`), climáticas (`weather_condition`) y geopolíticas (`geopolitical_risk_score`, `carrier_reliability_score`).
-
-### 2. Limpieza de datos
-- Revisión y tratamiento de valores nulos y duplicados
-- Corrección de tipos de datos (conversión a datetime, categorización)
-- Normalización de columnas categóricas (strip + lowercase)
-- Auditoría y validación de variables categóricas
-
-### 3. Tratamiento de outliers
-Los valores extremos en `lead_time_days` se mantuvieron como señal operativa real — en logística los retrasos severos no son errores de medición sino exactamente los eventos que se quieren modelar.
-> Referencia: Tukey, J.W. (1977). *Exploratory Data Analysis*, cap. 2.
-
-### 4. Construcción del índice de impacto (Risk Scoring Model)
-Normalización min-max de variables clave y construcción de un índice compuesto con pesos basados en impacto operativo:
-
-```
-impact = lead_time_norm × 0.4 + geo_norm × 0.3 + carrier_norm × 0.2 + weather_norm × 0.1
-```
-
-> Referencia: OECD (2008). *Handbook on Constructing Composite Indicators*, §3. ISO 31000:2018.
-
-### 5. Segmentación del riesgo
-Clasificación de cada ruta en 4 categorías de disrupción (geopolítica, fallo de carrier, retraso operativo, sin disrupción) mediante algoritmo basado en percentiles extremos (P90/P10).
-
-### 6. Análisis exploratorio (EDA)
-- Distribución de variables clave mediante boxplots
-- Correlación de Pearson y Spearman entre drivers de riesgo
-- Pairplot segmentado por ocurrencia de disrupción
-- Análisis de rutas más disruptivas mediante heatmap
-
-### 7. Matriz de riesgo ISO 31000
-Clasificación de rutas en 4 niveles (Critical / High / Medium / Low) combinando probabilidad de disrupción e impacto normalizado, con decisiones ejecutivas específicas por nivel y tipo.
-
-### 8. Mapa global interactivo
-Visualización geográfica de las rutas logísticas coloreadas por nivel de riesgo (rojo / naranja / verde) con tooltips interactivos.
-
----
-
-##  Principales hallazgos
-
-- **Todas las rutas analizadas superan el 65% de probabilidad de disrupción**, indicando una red logística con exposición generalizada al riesgo operativo.
-- **Los retrasos operativos son el tipo de disrupción con mayor impacto promedio (0.52)**, seguidos de eventos geopolíticos (0.44) y fallos de carrier (0.39).
-- **El corredor Asia–Europa concentra las rutas más críticas**, especialmente aquellas con disrupciones de tipo Carrier y Geopolítico.
-- **Shanghai – Singapore** se posiciona como la ruta de mayor criticidad, con el mayor impacto normalizado del conjunto.
-- **El transporte marítimo** presenta la mayor cantidad de retrasos extremos; el transporte aéreo no registra outliers en tiempo de entrega.
-- La severidad climática actúa como **amplificador del riesgo**, incrementando tanto el impacto como la volatilidad operativa.
-
----
-
-## 🔴Rutas críticas — Acción inmediata recomendada
-
-| Ruta | Tipo disrupción | Decisión |
-|------|----------------|----------|
-| Rotterdam – Busan | Carrier | Reevaluar SLA del carrier, sustituir si es necesario |
-| Rotterdam – Marseille | Operativo | Aumentar buffer stock +15% y ajustar plan |
-| Hamburg – Rotterdam | Geopolítico | Diversificar rutas alternativas |
-| Los Ángeles – Singapore | Geopolítico | Aumentar buffer +15% y ajustar plan |
-| Shanghai – Singapore | Crítico | Plan de contingencia inmediato |
-
----
-
-##  Autora
-
-**Ana Cristina Urdaneta Flores**
-Analista de Datos | Ingeniería de Petróleo | IT Academy Barcelona Activa
- Barcelona, España
-🔗 [LinkedIn](https://www.linkedin.com/in/urdanetaac)
-
----
-
-*Nota: El dashboard de visualización interactivo fue desarrollado con asistencia de IA (Claude, Anthropic) para la implementación del código. El diseño, los requisitos técnicos, las preguntas de negocio, la metodología y las especificaciones analíticas fueron definidos por la autora.*
-| Ruta | Tipo disrupción | Decisión |
-|------|----------------|----------|
-| Rotterdam – Busan | Carrier | Reevaluar SLA del carrier, sustituir si es necesario |
-| Rotterdam – Marseille | Operativo | Aumentar buffer stock +15% y ajustar plan |
-| Hamburg – Rotterdam | Geopolítico | Diversificar rutas alternativas |
-| Los Ángeles – Singapore | Geopolítico | Aumentar buffer +15% y ajustar plan |
-| Shanghai – Singapore | Crítico | Plan de contingencia inmediato |
-
----
-
-##  Autora
-
-**Ana Cristina Urdaneta Flores**
-Analista de Datos | Ingeniería de Petróleo | IT Academy Barcelona Activa
- Barcelona, España
-🔗 [LinkedIn](https://www.linkedin.com/in/urdanetaac)
-
----
-
-*Nota: El dashboard de visualización interactivo fue desarrollado con asistencia de IA (Claude, Anthropic) para la implementación del código. El diseño, los requisitos técnicos, las preguntas de negocio, la metodología y las especificaciones analíticas fueron definidos por la autora.*
+Prototipo para portafolio. Versión del 11 de octubre de 2026.
